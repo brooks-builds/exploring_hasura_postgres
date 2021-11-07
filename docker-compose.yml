@@ -1,0 +1,23 @@
+version: "3.9"
+services:
+  database:
+    image: postgres:latest
+    restart: always
+    environment:
+      POSTGRES_PASSWORD: keyboardcat
+    volumes:
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+  hasura:
+    image: hasura/graphql-engine:latest
+    restart: always
+    ports:
+    - "8080:8080"
+    depends_on:
+      - "wait-for-it"
+    environment:
+      HASURA_GRAPHQL_DATABASE_URL: postgres://postgres:keyboardcat@database:5432/postgres
+      HASURA_GRAPHQL_ENABLE_CONSOLE: 'true'
+      HASURA_GRAPHQL_ADMIN_SECRET: superpassword
+  wait-for-it:
+    image: toschneck/wait-for-it:latest
+    command: database:5432
