@@ -1,0 +1,10 @@
+query ListAllItems {
+  items {
+    id
+    name
+    price
+    store {
+      name
+    }
+  }
+}

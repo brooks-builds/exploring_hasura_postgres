@@ -1,0 +1,17 @@
+[package]
+name = "exploring_hasura_postgres"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+anyhow = "1.0.45"
+dotenv = "0.15.0"
+futures = "0.3.17"
+graphql_client = "0.10.0"
+graphql_query_derive = "0.10.0"
+reqwest = { version = "0.11.6", features = [ "json" ]}
+serde = { version = "1.0.130", features = [ "derive" ]}
+serde_json = "1.0.70"
+tokio = { version = "1", features = ["full"] }
