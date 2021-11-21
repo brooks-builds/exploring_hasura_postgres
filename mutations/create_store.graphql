@@ -1,0 +1,8 @@
+mutation CreateStore($name: String!) {
+  insert_stores(objects: {name: $name}) {
+    returning {
+      id
+      name
+    }
+  }
+}

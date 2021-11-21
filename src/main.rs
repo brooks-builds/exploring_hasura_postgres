@@ -81,14 +81,78 @@ async fn get_items(uri: &str, key: &str) -> Result<Vec<Item>, Box<dyn std::error
     Ok(items)
 }
 
+#[derive(GraphQLQuery)]
+#[graphql(
+    schema_path = "queries/schema.json",
+    query_path = "mutations/create_store.graphql",
+    response_derives = "Debug"
+)]
+struct CreateStore;
+
+async fn create_store_fn(
+    uri: &str,
+    key: &str,
+    name: &str,
+) -> Result<(), Box<dyn std::error::Error>> {
+    let variables = create_store::Variables {
+        name: name.to_owned(),
+    };
+    let result: Response<create_store::ResponseData> = reqwest::Client::new()
+        .post(uri)
+        .header("x-hasura-admin-secret", key)
+        .json(&CreateStore::build_query(variables))
+        .send()
+        .await?
+        .json()
+        .await?;
+    dbg!(result);
+    Ok(())
+}
+
+#[derive(GraphQLQuery)]
+#[graphql(
+    schema_path = "queries/schema.json",
+    query_path = "mutations/update_item_store.graphql",
+    response_derives = "Debug"
+)]
+struct UpdateStore;
+
+async fn update_item_store(
+    uri: &str,
+    key: &str,
+    item_id: i64,
+    new_store_id: i64,
+) -> Result<(), Box<dyn std::error::Error>> {
+    let variables = update_store::Variables {
+        id: update_store::items_pk_columns_input { id: item_id },
+        store_id: new_store_id,
+    };
+    let result: Response<update_store::ResponseData> = reqwest::Client::new()
+        .post(uri)
+        .header("x-hasura-admin-secret", key)
+        .json(&UpdateStore::build_query(variables))
+        .send()
+        .await?
+        .json()
+        .await?;
+    dbg!(result);
+    Ok(())
+}
+
 #[tokio::main]
 async fn main() {
     dotenv::dotenv().ok();
     let graphql_uri = env::var("GRAPHQL_URI").unwrap();
     let graphql_key = env::var("GRAPHQL_KEY").unwrap();
-    get_stores(graphql_uri.clone(), graphql_key.clone())
+    // get_stores(graphql_uri.clone(), graphql_key.clone())
+    //     .await
+    //     .unwrap();
+    // let items = get_items(&graphql_uri, &graphql_key).await.unwrap();
+    // dbg!(items);
+    // create_store_fn(&graphql_uri, &graphql_key, "Home Depot")
+    //     .await
+    //     .unwrap();
+    update_item_store(&graphql_uri, &graphql_key, 1, 6)
         .await
         .unwrap();
-    let items = get_items(&graphql_uri, &graphql_key).await.unwrap();
-    dbg!(items);
 }

@@ -11,13 +11,21 @@ services:
     image: hasura/graphql-engine:latest
     restart: always
     ports:
-    - "8080:8080"
+      - "8080:8080"
     depends_on:
       - "wait-for-it"
+      - "auth"
     environment:
       HASURA_GRAPHQL_DATABASE_URL: postgres://postgres:keyboardcat@database:5432/postgres
       HASURA_GRAPHQL_ENABLE_CONSOLE: 'true'
-      HASURA_GRAPHQL_ADMIN_SECRET: superpassword
+      HASURA_GRAPHQL_JWT_SECRET: '{\"type\": \"HS256\", \"key\": \"keyboardcat\"}'
   wait-for-it:
     image: toschneck/wait-for-it:latest
     command: database:5432
+  auth:
+    image: node:latest
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./auth_server:/auth_server
+    command: "node /auth_server/app.js"
