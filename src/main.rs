@@ -58,7 +58,7 @@ async fn get_stores(uri: String, key: String) -> Result<(), Box<dyn std::error::
 async fn get_items(uri: &str, key: &str) -> Result<Vec<Item>, Box<dyn std::error::Error>> {
     let result: Response<list_all_items::ResponseData> = reqwest::Client::new()
         .post(uri)
-        .header("x-hasura-admin-secret", key)
+        .header("Authorization", format!("Bearer {}", key))
         .json(&ListAllItems::build_query(list_all_items::Variables))
         .send()
         .await?
@@ -139,20 +139,52 @@ async fn update_item_store(
     Ok(())
 }
 
+#[derive(GraphQLQuery)]
+#[graphql(
+    schema_path = "queries/schema.json",
+    query_path = "mutations/login.graphql",
+    response_derives = "Debug"
+)]
+struct Login;
+
+async fn login(
+    uri: &str,
+    username: &str,
+    password: &str,
+) -> Result<String, Box<dyn std::error::Error>> {
+    let variables = login::Variables {
+        username: username.to_owned(),
+        password: password.to_owned(),
+    };
+    let result: Response<login::ResponseData> = reqwest::Client::new()
+        .post(uri)
+        .json(&Login::build_query(variables))
+        .send()
+        .await?
+        .json()
+        .await?;
+    let response = result.data.unwrap().login.unwrap();
+    if let Some(error) = response.error {
+        panic!("Error logging in: {}", error);
+    }
+    let token = response.token.unwrap();
+    Ok(token)
+}
+
 #[tokio::main]
 async fn main() {
     dotenv::dotenv().ok();
     let graphql_uri = env::var("GRAPHQL_URI").unwrap();
-    let graphql_key = env::var("GRAPHQL_KEY").unwrap();
+    let token = login(&graphql_uri, "brooks", "1234").await.unwrap();
     // get_stores(graphql_uri.clone(), graphql_key.clone())
     //     .await
     //     .unwrap();
-    // let items = get_items(&graphql_uri, &graphql_key).await.unwrap();
-    // dbg!(items);
+    let items = get_items(&graphql_uri, &token).await.unwrap();
+    dbg!(items);
     // create_store_fn(&graphql_uri, &graphql_key, "Home Depot")
     //     .await
     //     .unwrap();
-    update_item_store(&graphql_uri, &graphql_key, 1, 6)
-        .await
-        .unwrap();
+    // update_item_store(&graphql_uri, &graphql_key, 1, 6)
+    //     .await
+    //     .unwrap();
 }

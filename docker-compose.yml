@@ -18,7 +18,9 @@ services:
     environment:
       HASURA_GRAPHQL_DATABASE_URL: postgres://postgres:keyboardcat@database:5432/postgres
       HASURA_GRAPHQL_ENABLE_CONSOLE: 'true'
-      HASURA_GRAPHQL_JWT_SECRET: '{\"type\": \"HS256\", \"key\": \"keyboardcat\"}'
+      HASURA_GRAPHQL_JWT_SECRET: '{"type":"HS256","key":"keyboardcatkeyboardcatkeyboardcatkeyboardcat","claims_format":"json"}'
+      HASURA_GRAPHQL_ADMIN_SECRET: 'keyboardcat'
+      HASURA_GRAPHQL_UNAUTHORIZED_ROLE: 'unauthenticated'
   wait-for-it:
     image: toschneck/wait-for-it:latest
     command: database:5432
